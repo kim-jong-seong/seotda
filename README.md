@@ -9,6 +9,7 @@ sudo nano /etc/nginx/conf.d/seotda.conf
 
 # pm2로 서버 시작
 cd seotda
+
 pm2 start server.js
 
 # link
