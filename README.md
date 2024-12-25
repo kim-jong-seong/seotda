@@ -12,4 +12,4 @@ cd seotda
 pm2 start server.js
 
 # link
-http://18.218.82.175:5000/
+http://[public IP]:5000/
