@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>섯다</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #gameContainer {
+            display: none;
+        }
+        #playersList {
+            margin: 20px 0;
+        }
+        .card {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        #startButton, #endButton {
+            display: none;
+        }
+        .tab-content {
+            display: none;
+            padding: 15px;
+            border: 1px solid #ddd;
+            margin-top: -1px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .pokkal-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .pokkal-list li {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .pokkal-list li.current {
+            background-color: #fff3cd;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        #pokkalTab {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .tab-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #4A5568;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 6px;
+        }
+        .pokkal-header {
+            font-weight: bold;
+            background-color: #34495E;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 15px 0 8px 0;
+        }
+        .pokkal-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s ease;
+        }
+        .pokkal-list li:hover:not(.pokkal-header) {
+            background-color: #f8f9fa;
+        }
+        .toggle-button {
+            padding: 8px 16px;
+            background-color: white;
+            color: #4A5568;
+            border: 2px solid white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: bold;
+            font-size: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .toggle-button:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        }
+        .pokkal-list li.current {
+            background-color: #E8F4FC;
+            font-weight: bold;
+            border-radius: 4px;
+            border-left: 4px solid #3498DB;
+        }
+        .toggle-button {
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .toggle-button:hover {
+            background-color: #e0e0e0;
+        }
+        .pokkal-content {
+            transition: max-height 0.5s ease-out;
+            max-height: 2000px;
+            overflow: hidden;
+        }
+        .pokkal-content.hidden {
+            max-height: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginContainer">
+        <h2>게임 참가</h2>
+        <input type="text" id="playerName" placeholder="닉네임을 입력하세요">
+        <button onclick="joinGame()">참가하기</button>
+    </div>
+
+    <div id="gameContainer">
+        <h2>게임 룸</h2>
+        <button id="startButton" onclick="startGame()">게임 시작</button>
+        <button id="endButton" onclick="endGame()">게임 종료</button>
+        
+        <div id="playersList">
+            <h3>참가자 목록</h3>
+            <ul id="players"></ul>
+        </div>
+
+        <div id="myCards">
+            <h3>내 카드</h3>
+            <div id="cardContainer"></div>
+        </div>
+        <div id="pokkalTab">
+            <div class="tab-title">
+                <span>족보</span>
+                <button class="toggle-button" onclick="togglePokkal()">접기/펼치기</button>
+            </div>
+            <div class="pokkal-content">
+                <ul class="pokkal-list">
+                    <li class="pokkal-header">일반 패</li>
+                    <li data-pokkal="38광땡">38광땡</li>
+                    <li data-pokkal="13광땡">13광땡</li>
+                    <li data-pokkal="18광땡">18광땡</li>
+                    <li data-pokkal="10땡">장땡</li>
+                    <li data-pokkal="9땡">9땡</li>
+                    <li data-pokkal="8땡">8땡</li>
+                    <li data-pokkal="7땡">7땡</li>
+                    <li data-pokkal="6땡">6땡</li>
+                    <li data-pokkal="5땡">5땡</li>
+                    <li data-pokkal="4땡">4땡</li>
+                    <li data-pokkal="3땡">3땡</li>
+                    <li data-pokkal="2땡">2땡</li>
+                    <li data-pokkal="1땡">1땡</li>
+                    <li data-pokkal="알리">알리</li>
+                    <li data-pokkal="독사">독사</li>
+                    <li data-pokkal="구삥">구삥</li>
+                    <li data-pokkal="장삥">장삥</li>
+                    <li data-pokkal="장사">장사</li>
+                    <li data-pokkal="세륙">세륙</li>
+                    <li data-pokkal="갑오">갑오</li>
+                    <li data-pokkal="8끗">8끗</li>
+                    <li data-pokkal="7끗">7끗</li>
+                    <li data-pokkal="6끗">6끗</li>
+                    <li data-pokkal="5끗">5끗</li>
+                    <li data-pokkal="4끗">4끗</li>
+                    <li data-pokkal="3끗">3끗</li>
+                    <li data-pokkal="2끗">2끗</li>
+                    <li data-pokkal="1끗">1끗</li>
+                    <li data-pokkal="망통">망통</li>
+                    <li class="pokkal-header">특수 패</li>
+                    <li data-pokkal="구사">구사<br/>(게임에 가장 높은 족보가 알리 이하일 경우 자동적으로 재경기를 하게 된다.)</li>
+                    <li data-pokkal="멍텅구리구사">멍텅구리구사<br/>(게임 결과 가장 높은 족보가 장땡 이하, 10땡 위로 나오지 않으면 자동적으로 재경기를 하게 된다.)</li>
+                    <li data-pokkal="47암행어사">47암행어사<br/>(18 광땡 & 13 광땡과의 대결에서 승리할 수 있다., 광땡이 뜨지 않을 경우 한 끗으로 간주된다.)</li>
+                    <li data-pokkal="37땡잡이">37땡잡이<br/>(9땡 이하의 모든 땡과의 대결에서 승리할 수 있다. 땡이 뜨지 않을 경우엔 망통으로 간주된다.)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let playerId;
+        let isHost = false;
+
+        function connectWebSocket() {
+            const host = window.location.hostname;
+            ws = new WebSocket(`ws://${host}:5000/ws`);
+
+            ws.onopen = () => {
+                console.log('웹소켓 연결됨');
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                switch (data.type) {
+                    case 'joinResponse':
+                        handleJoinResponse(data);
+                        break;
+                    case 'gameState':
+                        updateGameState(data);
+                        break;
+                    case 'cards':
+                        displayCards(data.cards);
+                        break;
+                    case 'error':
+                        alert(data.message);
+                        break;
+                }
+            };
+
+            ws.onclose = () => {
+                console.log('웹소켓 연결 끊김');
+                alert('서버와의 연결이 끊어졌습니다.');
+            };
+        }
+
+        function joinGame() {
+            const playerName = document.getElementById('playerName').value;
+            if (!playerName) {
+                alert('닉네임을 입력해주세요.');
+                return;
+            }
+
+            playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            
+            ws.send(JSON.stringify({
+                type: 'join',
+                playerId: playerId,
+                playerName: playerName
+            }));
+        }
+
+        function handleJoinResponse(data) {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            isHost = data.isHost;
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            
+            if (isHost) {
+                document.getElementById('startButton').style.display = 'block';
+                document.getElementById('endButton').style.display = 'block';
+            }
+        }
+
+        function updateGameState(state) {
+            const playersList = document.getElementById('players');
+            playersList.innerHTML = '';
+
+            state.players.forEach(player => {
+                const li = document.createElement('li');
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = player.name + ' ';
+                li.appendChild(nameSpan);
+
+                if (player.hasCards) {
+                    // 카드 이미지 2장 추가
+                    for (let i = 0; i < 2; i++) {
+                        const img = document.createElement('img');
+                        img.src = 'image/0.png';
+                        img.style.width = '20px';  // 이미지 너비
+                        img.style.height = '30px'; // 이미지 높이
+                        img.style.marginLeft = '5px'; // 이미지 간격
+                        li.appendChild(img);
+                    }
+                }
+                playersList.appendChild(li);
+            });
+
+            const startButton = document.getElementById('startButton');
+            if (isHost) {
+                startButton.disabled = state.gameStarted;
+            }
+        }
+
+        let myCardNumbers = []; // 내 카드 번호를 저장할 전역 변수
+        let flippedCards = 0; // 앞면으로 뒤집힌 카드 수를 추적
+
+        // 족보 계산 함수
+        function calculatePokkal(cards) {
+            if (cards.length !== 2) return "카드 2장이 필요합니다";
+            
+            const card1 = cards[0];
+            const card2 = cards[1];
+            
+            // 월 계산
+            const month1 = Math.floor(card1 / 100) || card1;
+            const month2 = Math.floor(card2 / 100) || card2;
+            const months = [month1, month2].sort((a, b) => a - b);
+            
+            // 특수 족보 체크 (광 체크를 먼저 해야 함)
+            if ((card1 === 300 && card2 === 800) || (card1 === 800 && card2 === 300)) return "38광땡";
+            if ((card1 === 100 && card2 === 300) || (card1 === 300 && card2 === 100)) return "13광땡";
+            if ((card1 === 100 && card2 === 800) || (card1 === 800 && card2 === 100)) return "18광땡";
+            
+            // 구사 패턴 체크
+            if ((month1 === 4 && month2 === 9) || (month1 === 9 && month2 === 4)) {
+                // 둘 다 광이 아닌 경우 멍텅구리구사
+                if (card1 !== 300 && card1 !== 800 && card2 !== 300 && card2 !== 800) {
+                    return "멍텅구리구사";
+                }
+                // 그 외의 경우는 일반 구사
+                return "구사";
+            }
+
+            // 암행어사와 땡잡이 체크
+            if ((month1 === 4 && month2 === 7) || (month1 === 7 && month2 === 4)) return "47암행어사";
+            if ((month1 === 3 && month2 === 7) || (month1 === 7 && month2 === 3)) return "37땡잡이";
+            
+            // 일반땡 체크
+            if (month1 === month2) return month1 + "땡";
+            
+            // 끗보다 높은 족보들 체크
+            if (months[0] === 1) {
+                if (months[1] === 2) return "알리";
+                if (months[1] === 4) return "독사";
+                if (months[1] === 9) return "구삥";
+                if (months[1] === 10) return "장삥";
+            }
+            // 갑오(9+4=13)와 세륙(4+6=10)의 경우
+            // 끗수가 9인 경우는 갑오
+            const kut = (month1 + month2) % 10;
+            if (kut === 9) return "갑오";
+            if (months[0] === 4) {
+                if (months[1] === 10) return "장사";
+                if (months[1] === 6) return "세륙";
+            }
+            
+            // 끗수가 0인 경우는 망통
+            if (kut === 0) return "망통";
+            // 나머지 끗수 계산
+            return kut + "끗";
+        }
+
+        function updatePokkalHighlight(pokkal) {
+            // 모든 족보 항목에서 강조 표시 제거
+            document.querySelectorAll('.pokkal-list li').forEach(li => {
+                li.classList.remove('current');
+            });
+
+            if (pokkal) {
+                // 현재 족보 강조 표시
+                const pokkalElement = document.querySelector(`.pokkal-list li[data-pokkal="${pokkal}"]`);
+                if (pokkalElement) {
+                    pokkalElement.classList.add('current');
+                }
+            }
+        }
+
+        function displayCards(cards) {
+            myCardNumbers = cards; // 받은 카드 번호 저장
+            flippedCards = 0; // 뒤집힌 카드 수 초기화
+            const cardContainer = document.getElementById('cardContainer');
+            cardContainer.innerHTML = '';
+
+            cards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                
+                // 카드 이미지 생성 (처음에는 뒷면)
+                const cardImage = document.createElement('img');
+                cardImage.src = 'image/0.png';  // 처음에는 모든 카드가 뒷면
+                cardImage.style.width = '100px';
+                cardImage.style.height = '150px';
+                cardImage.style.cursor = 'pointer';
+                cardImage.dataset.index = index;
+                cardImage.dataset.isFlipped = 'false';
+                
+                // 클릭 이벤트 추가
+                cardImage.addEventListener('click', function() {
+                    if (this.dataset.isFlipped === 'false') {
+                        this.src = `image/${myCardNumbers[this.dataset.index]}.png`;
+                        this.dataset.isFlipped = 'true';
+                        flippedCards++;
+                    } else {
+                        this.src = 'image/0.png';
+                        this.dataset.isFlipped = 'false';
+                        flippedCards--;
+                    }
+
+                    // 두 카드가 모두 앞면이면 족보 강조 표시
+                    if (flippedCards === 2) {
+                        const pokkal = calculatePokkal(myCardNumbers);
+                        updatePokkalHighlight(pokkal);
+                    } else {
+                        updatePokkalHighlight(null); // 강조 표시 제거
+                    }
+                });
+                
+                cardElement.appendChild(cardImage);
+                cardContainer.appendChild(cardElement);
+            });
+        }
+
+        function startGame() {
+            ws.send(JSON.stringify({
+                type: 'start',
+                playerId: playerId
+            }));
+        }
+
+        function endGame() {
+            ws.send(JSON.stringify({
+                type: 'end',
+                playerId: playerId
+            }));
+        }
+
+        function togglePokkal() {
+            const content = document.querySelector('.pokkal-content');
+            content.classList.toggle('hidden');
+        }
+
+        // 페이지 로드 시 웹소켓 연결
+        connectWebSocket();
+    </script>
+</body>
+</html>
