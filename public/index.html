@@ -1,179 +1,314 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>섯다</title>
-    <style>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+   <title>섯다</title>
+   <style>
+    * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        margin: 0;
+        padding: 16px;
+        background-color: #f7f8fa;
+        max-width: 100%;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        min-height: 100vh;
+    }
+
+    /* Login Container Styles */
+    #loginContainer {
+        max-width: 400px;
+        margin: 20px auto;
+        padding: 24px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    #loginContainer h2 {
+        margin: 0 0 24px 0;
+        color: #2d3748;
+        text-align: center;
+        font-size: 24px;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+        outline: none;
+        border-color: #4299e1;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px 20px;
+        margin-bottom: 12px;
+        border: none;
+        border-radius: 8px;
+        background-color: #4299e1;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    button:active {
+        background-color: #3182ce;
+        transform: translateY(1px);
+    }
+
+    /* Game Container Styles */
+    #gameContainer {
+        display: none;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .room-info {
+        background-color: white;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .room-code {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2d3748;
+    }
+
+    #startButton, #endButton {
+        display: none;
+        margin: 8px 0;
+    }
+
+    /* Players List Styles */
+    #playersList {
+        background: white;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    #playersList h3 {
+        margin: 0 0 12px 0;
+        color: #2d3748;
+    }
+
+    #players {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .player-card-indicator {
+        display: inline-flex;
+        margin-left: 8px;
+        gap: 4px;
+    }
+
+    .player-card-indicator img {
+        width: 40px;
+        height: 60px;
+        border-radius: 2px;
+    }
+
+    #players li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 15px;
+    }
+
+    #players li:last-child {
+        border-bottom: none;
+    }
+
+    /* Card Container Styles */
+    #myCards {
+        background: white;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    #myCards h3 {
+        margin: 0 0 12px 0;
+        color: #2d3748;
+    }
+
+    #cardContainer {
+        position: relative;
+        height: 180px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .card {
+        position: absolute;
+        touch-action: none;
+    }
+
+    .card img {
+        width: 120px;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .card.final {
+        position: relative;
+    }
+
+    /* Pokkal Tab Styles */
+    #pokkalTab {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .tab-title {
+        padding: 16px;
+        background-color: #2d3748;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .toggle-button {
+        background-color: transparent;
+        border: 1px solid white;
+        padding: 8px 16px;
+        color: white;
+        font-size: 14px;
+        margin: 0;
+        width: auto;
+    }
+
+    .pokkal-content {
+        transition: max-height 0.3s ease-out;
+        max-height: 2000px;
+        overflow: hidden;
+    }
+
+    .pokkal-content.hidden {
+        max-height: 0;
+    }
+
+    .pokkal-list {
+        list-style: none;
+        padding: 16px;
+        margin: 0;
+    }
+
+    .pokkal-header {
+        background-color: #4a5568;
+        color: white;
+        padding: 8px 12px;
+        margin: 16px -16px 8px -16px;
+        font-weight: bold;
+    }
+
+    .pokkal-list li {
+        padding: 12px 0;
+        border-bottom: 1px solid #edf2f7;
+        color: #4a5568;
+    }
+
+    .pokkal-list li.current {
+        background-color: #ebf8ff;
+        margin: 0 -16px;
+        padding: 12px 16px;
+        border-left: 4px solid #4299e1;
+        font-weight: bold;
+    }
+
+    .error-message {
+        color: #e53e3e;
+        text-align: center;
+        margin: 12px 0;
+        font-size: 14px;
+    }
+
+    /* Mobile Optimization */
+    @media (max-width: 480px) {
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        #gameContainer {
-            display: none;
-        }
-
-        #playersList {
-            margin: 20px 0;
-        }
-
-        #cardContainer {
-            position: relative;
-            height: 200px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .card {
-            position: absolute;
-            user-select: none;
+            padding: 12px;
         }
 
         .card img {
-            width: 130px;
-            height: 195px;
-            cursor: pointer;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            width: 100px;
+            height: auto;
         }
 
-        .card.final {
-            position: relative;
-        }
-
-        #startButton, #endButton {
-            display: none;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 15px;
-            border: 1px solid #ddd;
-            margin-top: -1px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .pokkal-list {
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .pokkal-list li {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .pokkal-list li.current {
-            background-color: #E8F4FC;
-            font-weight: bold;
-            border-radius: 4px;
-            border-left: 4px solid #3498DB;
-        }
-
-        #pokkalTab {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
+        #cardContainer {
+            height: 150px;
         }
 
         .tab-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            font-size: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #4A5568;
-            color: white;
-            padding: 12px 15px;
-            border-radius: 6px;
-        }
-
-        .pokkal-header {
-            font-weight: bold;
-            background-color: #34495E;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            margin: 15px 0 8px 0;
-        }
-
-        .pokkal-list li {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            transition: background-color 0.2s ease;
-        }
-
-        .pokkal-list li:hover:not(.pokkal-header) {
-            background-color: #f8f9fa;
+            font-size: 16px;
         }
 
         .toggle-button {
-            padding: 8px 16px;
-            background-color: white;
-            color: #4A5568;
-            border: 2px solid white;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-weight: bold;
-            font-size: 15px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 6px 12px;
+            font-size: 13px;
         }
 
-        .toggle-button:hover {
-            background-color: #f8f9fa;
-            transform: translateY(-1px);
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        #loginContainer {
+            padding: 20px;
         }
 
-        .pokkal-content {
-            transition: max-height 0.5s ease-out;
-            max-height: 2000px;
-            overflow: hidden;
+        input[type="text"] {
+            padding: 10px 14px;
         }
-
-        .pokkal-content.hidden {
-            max-height: 0;
-            overflow: hidden;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                font-size: 14px;
-            }
-
-            #playersList {
-                margin: 10px 0;
-            }
-        }
+    }
     </style>
 </head>
 <body>
     <div id="loginContainer">
         <h2>게임 참가</h2>
         <input type="text" id="playerName" placeholder="닉네임을 입력하세요">
-        <button onclick="joinGame()">참가하기</button>
+        <input type="text" id="room-code-input" placeholder="방 코드" maxlength="4">
+        <button onclick="createRoom()">방 만들기</button>
+        <button onclick="joinRoom()">참가하기</button>
+        <div class="error-message" id="error-message"></div>
     </div>
 
     <div id="gameContainer">
-        <h2>게임 룸</h2>
+        <div class="room-info">
+            <span class="room-code">방 코드: <span id="current-room-code"></span></span>
+            <button onclick="leaveRoom()" style="width: auto; margin: 0; padding: 8px 16px;">나가기</button>
+        </div>
+
         <button id="startButton" onclick="startGame()">게임 시작</button>
         <button id="endButton" onclick="endGame()">게임 종료</button>
-        
+
         <div id="playersList">
             <h3>참가자 목록</h3>
             <ul id="players"></ul>
@@ -191,7 +326,7 @@
             </div>
             <div class="pokkal-content">
                 <ul class="pokkal-list">
-                    <li class="pokkal-header">일반 패</li>
+                    <li class="pokkal-header" style="padding-left: 12px; color: white;">일반 패</li>
                     <li data-pokkal="38광땡">38광땡</li>
                     <li data-pokkal="13광땡">13광땡</li>
                     <li data-pokkal="18광땡">18광땡</li>
@@ -221,372 +356,467 @@
                     <li data-pokkal="2끗">2끗</li>
                     <li data-pokkal="1끗">1끗</li>
                     <li data-pokkal="망통">망통</li>
-                    <li class="pokkal-header">특수 패</li>
-                    <li data-pokkal="구사">구사<br/>(게임에 가장 높은 족보가 알리 이하일 경우 자동적으로 재경기를 하게 된다.)</li>
-                    <li data-pokkal="멍텅구리구사">멍텅구리구사<br/>(게임 결과 가장 높은 족보가 장땡 이하, 10땡 위로 나오지 않으면 자동적으로 재경기를 하게 된다.)</li>
-                    <li data-pokkal="47암행어사">47암행어사<br/>(18 광땡 & 13 광땡과의 대결에서 승리할 수 있다., 광땡이 뜨지 않을 경우 한 끗으로 간주된다.)</li>
-                    <li data-pokkal="37땡잡이">37땡잡이<br/>(9땡 이하의 모든 땡과의 대결에서 승리할 수 있다. 땡이 뜨지 않을 경우엔 망통으로 간주된다.)</li>
+                    <li class="pokkal-header" style="padding-left: 12px; color: white;">특수 패</li>
+                    <li data-pokkal="구사">구사<br>(게임에 가장 높은 족보가 알리 이하일 경우 자동적으로 재경기를 하게 된다.)</li>
+                    <li data-pokkal="멍텅구리구사">멍텅구리구사<br>(게임 결과 가장 높은 족보가 장땡 이하, 10땡 위로 나오지 않으면 자동적으로 재경기를 하게 된다.)</li>
+                    <li data-pokkal="47암행어사">47암행어사<br>(18 광땡 & 13 광땡과의 대결에서 승리할 수 있다., 광땡이 뜨지 않을 경우 한 끗으로 간주된다.)</li>
+                    <li data-pokkal="37땡잡이">37땡잡이<br>(9땡 이하의 모든 땡과의 대결에서 승리할 수 있다. 땡이 뜨지 않을 경우엔 망통으로 간주된다.)</li>
                 </ul>
             </div>
         </div>
     </div>
 
-    <script>
-        let ws;
-        let playerId;
-        let isHost = false;
-        let myCardNumbers = [];
-        let flippedCards = 0;
-        let cachedPokkal = null;
+   <script>
+       let ws;
+       let playerId = null;
+       let isHost = false;
+       let currentRoom = null;
+       let myCardNumbers = [];
+       let flippedCards = 0;
+       let cachedPokkal = null;
+       let gameEnded = false;
 
-        function preloadImages() {
-            const images = [];
-            images.push(new Image().src = 'image/0.png');
-            for(let i = 1; i <= 10; i++) {
-                images.push(new Image().src = `image/${i}.png`);
-            }
-            for(let i = 100; i <= 1000; i += 100) {
-                images.push(new Image().src = `image/${i}.png`);
-            }
-            return images;
-        }
+       function preloadImages() {
+           const images = [];
+           images.push(new Image().src = 'image/0.png');
+           for(let i = 1; i <= 10; i++) {
+               images.push(new Image().src = `image/${i}.png`);
+           }
+           for(let i = 100; i <= 1000; i += 100) {
+               images.push(new Image().src = `image/${i}.png`);
+           }
+           return images;
+       }
 
-        function displayCards(cards) {
-            const cardContainer = document.getElementById('cardContainer');
-            cardContainer.innerHTML = '';
-            
-            myCardNumbers = cards;
-            flippedCards = 0;
-            cachedPokkal = null;
-            
-            // 두 번째 카드 (밑에 깔린 카드)
-            const secondCard = document.createElement('div');
-            secondCard.className = 'card';
-            const secondCardImg = document.createElement('img');
-            secondCardImg.src = `image/${cards[1]}.png`;  // 두 번째 카드는 처음부터 앞면
-            secondCard.appendChild(secondCardImg);
-            
-            // 첫 번째 카드 (위에 있는 카드)
-            const firstCard = document.createElement('div');
-            firstCard.className = 'card';
-            const firstCardImg = document.createElement('img');
-            firstCardImg.src = 'image/0.png';  // 처음에는 뒷면
-            firstCard.appendChild(firstCardImg);
+       function displayCards(cards) {
+           const cardContainer = document.getElementById('cardContainer');
+           cardContainer.innerHTML = '';
+           
+           myCardNumbers = cards;
+           flippedCards = 0;
+           cachedPokkal = null;
+           
+           // 두 번째 카드 (밑에 깔린 카드)
+           const secondCard = document.createElement('div');
+           secondCard.className = 'card';
+           const secondCardImg = document.createElement('img');
+           secondCardImg.src = `image/${cards[1]}.png`;  // 두 번째 카드는 처음부터 앞면
+           secondCard.appendChild(secondCardImg);
+           
+           // 첫 번째 카드 (위에 있는 카드)
+           const firstCard = document.createElement('div');
+           firstCard.className = 'card';
+           const firstCardImg = document.createElement('img');
+           firstCardImg.src = 'image/0.png';  // 처음에는 뒷면
+           firstCard.appendChild(firstCardImg);
 
-            let isFirstCardFlipped = false;
-            let isDragging = false;
-            let startY = 0;
+           let isFirstCardFlipped = false;
+           let isDragging = false;
+           let startY = 0;
 
-            // 첫 번째 카드 클릭 이벤트
-            firstCard.addEventListener('click', () => {
-                if (!isFirstCardFlipped) {
-                    firstCardImg.src = `image/${cards[0]}.png`;
-                    isFirstCardFlipped = true;
-                    flippedCards = 1;
-                }
-            });
+           // 첫 번째 카드 클릭 이벤트
+           firstCard.addEventListener('click', () => {
+               if (!isFirstCardFlipped) {
+                   firstCardImg.src = `image/${cards[0]}.png`;
+                   isFirstCardFlipped = true;
+                   flippedCards = 1;
+               }
+           });
 
-            // 마우스 이벤트 (PC)
-            firstCard.addEventListener('mousedown', (e) => {
-                if (isFirstCardFlipped) {
-                    isDragging = true;
-                    startY = e.clientY;
-                }
-            });
+           firstCard.addEventListener('mousedown', (e) => {
+               if (isFirstCardFlipped) {
+                   isDragging = true;
+                   startY = e.clientY;
+               }
+           });
 
-            // 마우스 이벤트 (PC)
-            document.addEventListener('mousemove', (e) => {
-                if (isDragging && isFirstCardFlipped) {
-                    let deltaY = e.clientY - startY;
-                    if (deltaY > 0) {  // 아래로 드래그할 때만
-                        firstCard.style.transform = `translateY(${deltaY}px)`;
-                    }
-                }
-            });
+           document.addEventListener('mousemove', (e) => {
+               if (isDragging && isFirstCardFlipped) {
+                   let deltaY = e.clientY - startY;
+                   if (deltaY > 0) {
+                       firstCard.style.transform = `translateY(${deltaY}px)`;
+                   }
+               }
+           });
 
-            document.addEventListener('mouseup', (e) => {
-                if (isDragging) {
-                    const deltaY = e.clientY - startY;
-                    if (deltaY > firstCardImg.height * 1) {
-                        showFinalCards();
-                    }
-                    firstCard.style.transform = '';
-                    isDragging = false;
-                }
-            });
+           document.addEventListener('mouseup', (e) => {
+               if (isDragging) {
+                   const deltaY = e.clientY - startY;
+                   if (deltaY > firstCardImg.height * 1) {
+                       showFinalCards();
+                   }
+                   firstCard.style.transform = '';
+                   isDragging = false;
+               }
+           });
 
-            // 터치 이벤트 (모바일)
-            firstCard.addEventListener('touchstart', (e) => {
-                if (isFirstCardFlipped) {
-                    isDragging = true;
-                    startY = e.touches[0].clientY;
-                }
-            });
+           firstCard.addEventListener('touchstart', (e) => {
+               if (isFirstCardFlipped) {
+                   isDragging = true;
+                   startY = e.touches[0].clientY;
+               }
+           });
 
-            // 터치 이벤트 (모바일)
-            firstCard.addEventListener('touchmove', (e) => {
-                if (isDragging && isFirstCardFlipped) {
-                    let deltaY = e.touches[0].clientY - startY;
-                    if (deltaY > 0) {  // 아래로 드래그할 때만
-                        e.preventDefault();  // 스크롤 방지
-                        firstCard.style.transform = `translateY(${deltaY}px)`;
-                    }
-                }
-            });
+           firstCard.addEventListener('touchmove', (e) => {
+               if (isDragging && isFirstCardFlipped) {
+                   let deltaY = e.touches[0].clientY - startY;
+                   if (deltaY > 0) {
+                       e.preventDefault();
+                       firstCard.style.transform = `translateY(${deltaY}px)`;
+                   }
+               }
+           });
 
-            firstCard.addEventListener('touchend', (e) => {
-                if (isDragging) {
-                    const transform = firstCard.style.transform;
-                    const match = transform.match(/translateY\((\d+)px\)/);
-                    if (match) {
-                        const deltaY = parseInt(match[1]);
-                        if (deltaY > firstCardImg.height * 1) {
-                            showFinalCards();
-                        }
-                    }
-                    firstCard.style.transform = '';
-                    isDragging = false;
-                }
-            });
+           firstCard.addEventListener('touchend', (e) => {
+               if (isDragging) {
+                   const transform = firstCard.style.transform;
+                   const match = transform.match(/translateY\((\d+)px\)/);
+                   if (match) {
+                       const deltaY = parseInt(match[1]);
+                       if (deltaY > firstCardImg.height * 1) {
+                           showFinalCards();
+                       }
+                   }
+                   firstCard.style.transform = '';
+                   isDragging = false;
+               }
+           });
 
-            function showFinalCards() {
-                cardContainer.innerHTML = '';
-                
-                const card1 = document.createElement('div');
-                card1.className = 'card final';
-                const img1 = document.createElement('img');
-                img1.src = `image/${cards[0]}.png`;
-                img1.dataset.cardNumber = cards[0];
-                img1.dataset.isFlipped = 'true';
-                img1.addEventListener('click', function() {
-                    if(this.dataset.isFlipped === 'true') {
-                        this.src = 'image/0.png';
-                        this.dataset.isFlipped = 'false';
-                    } else {
-                        this.src = `image/${this.dataset.cardNumber}.png`;
-                        this.dataset.isFlipped = 'true';
-                    }
-                    updatePokkalDisplay();
-                });
-                card1.appendChild(img1);
-                
-                const card2 = document.createElement('div');
-                card2.className = 'card final';
-                const img2 = document.createElement('img');
-                img2.src = `image/${cards[1]}.png`;
-                img2.dataset.cardNumber = cards[1];
-                img2.dataset.isFlipped = 'true';
-                img2.addEventListener('click', function() {
-                    if(this.dataset.isFlipped === 'true') {
-                        this.src = 'image/0.png';
-                        this.dataset.isFlipped = 'false';
-                    } else {
-                        this.src = `image/${this.dataset.cardNumber}.png`;
-                        this.dataset.isFlipped = 'true';
-                    }
-                    updatePokkalDisplay();
-                });
-                card2.appendChild(img2);
-                
-                cardContainer.appendChild(card1);
-                cardContainer.appendChild(card2);
-                
-                flippedCards = 2;
-                updatePokkalDisplay();
+           function showFinalCards() {
+               cardContainer.innerHTML = '';
+               
+               const card1 = document.createElement('div');
+               card1.className = 'card final';
+               const img1 = document.createElement('img');
+               img1.src = `image/${cards[0]}.png`;
+               img1.dataset.cardNumber = cards[0];
+               img1.dataset.isFlipped = 'true';
+               img1.addEventListener('click', function() {
+                   if(this.dataset.isFlipped === 'true') {
+                       this.src = 'image/0.png';
+                       this.dataset.isFlipped = 'false';
+                   } else {
+                       this.src = `image/${this.dataset.cardNumber}.png`;
+                       this.dataset.isFlipped = 'true';
+                   }
+                   updatePokkalDisplay();
+               });
+               card1.appendChild(img1);
+               
+               const card2 = document.createElement('div');
+               card2.className = 'card final';
+               const img2 = document.createElement('img');
+               img2.src = `image/${cards[1]}.png`;
+               img2.dataset.cardNumber = cards[1];
+               img2.dataset.isFlipped = 'true';
+               img2.addEventListener('click', function() {
+                   if(this.dataset.isFlipped === 'true') {
+                       this.src = 'image/0.png';
+                       this.dataset.isFlipped = 'false';
+                   } else {
+                    this.src = `image/${this.dataset.cardNumber}.png`;
+                       this.dataset.isFlipped = 'true';
+                   }
+                   updatePokkalDisplay();
+               });
+               card2.appendChild(img2);
+               
+               cardContainer.appendChild(card1);
+               cardContainer.appendChild(card2);
+               
+               flippedCards = 2;
+               updatePokkalDisplay();
 
-                function updatePokkalDisplay() {
-                    const card1Flipped = img1.dataset.isFlipped === 'true';
-                    const card2Flipped = img2.dataset.isFlipped === 'true';
-                    
-                    if (card1Flipped && card2Flipped) {
-                        if (!cachedPokkal) {
-                            cachedPokkal = calculatePokkal(myCardNumbers);
-                        }
-                        updatePokkalHighlight(cachedPokkal);
-                    } else {
-                        updatePokkalHighlight(null);
-                    }
-                }
-            }
+               function updatePokkalDisplay() {
+                   const card1Flipped = img1.dataset.isFlipped === 'true';
+                   const card2Flipped = img2.dataset.isFlipped === 'true';
+                   
+                   if (card1Flipped && card2Flipped) {
+                       if (!cachedPokkal) {
+                           cachedPokkal = calculatePokkal(myCardNumbers);
+                       }
+                       updatePokkalHighlight(cachedPokkal);
+                   } else {
+                       updatePokkalHighlight(null);
+                   }
+               }
+           }
 
-            cardContainer.appendChild(secondCard);
-            cardContainer.appendChild(firstCard);
-        }
+           cardContainer.appendChild(secondCard);
+           cardContainer.appendChild(firstCard);
+       }
 
-        function connectWebSocket() {
-            const host = window.location.hostname;
-            ws = new WebSocket(`ws://${host}:5000/ws`);
+       function connectWebSocket() {
+           const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+           const wsUrl = `${wsProtocol}//${window.location.hostname}:5000`;
+           ws = new WebSocket(wsUrl);
 
-            ws.onopen = () => {
-                console.log('웹소켓 연결됨');
-            };
+           ws.onopen = () => {
+               console.log('WebSocket connected');
+           };
 
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                
-                switch (data.type) {
-                    case 'joinResponse':
-                        handleJoinResponse(data);
-                        break;
-                    case 'gameState':
-                        updateGameState(data);
-                        break;
-                    case 'cards':
-                        displayCards(data.cards);
-                        break;
-                    case 'error':
-                        alert(data.message);
-                        break;
-                }
-            };
+           ws.onmessage = (event) => {
+               const data = JSON.parse(event.data);
+               console.log('Received:', data);
 
-            ws.onclose = () => {
-                console.log('웹소켓 연결 끊김');
-                alert('서버와의 연결이 끊어졌습니다.');
-            };
-        }
+               switch(data.type) {
+                   case 'roomCreated':
+                   case 'joinResponse':
+                       handleRoomJoin(data);
+                       break;
+                   case 'gameState':
+                       updateGameState(data);
+                       break;
+                   case 'cards':
+                       displayCards(data.cards);
+                       break;
+                   case 'error':
+                       showError(data.message);
+                       break;
+                   case 'leftRoom':
+                       showLoginContainer();
+                       break;
+               }
+           };
 
-        function joinGame() {
-            const playerName = document.getElementById('playerName').value;
-            if (!playerName) {
-                alert('닉네임을 입력해주세요.');
-                return;
-            }
+           ws.onclose = () => {
+               console.log('WebSocket disconnected');
+               setTimeout(connectWebSocket, 3000);
+           };
+       }
 
-            playerId = 'player_' + Math.random().toString(36).substr(2, 9);
-            
-            ws.send(JSON.stringify({
-                type: 'join',
-                playerId: playerId,
-                playerName: playerName
-            }));
-        }
+       function handleRoomJoin(data) {
+           if (data.error) {
+               showError(data.error);
+               return;
+           }
 
-        function handleJoinResponse(data) {
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
+           currentRoom = data.roomCode;
+           isHost = data.isHost;
+           document.getElementById('current-room-code').textContent = currentRoom;
+           showGameContainer();
+       }
 
-            isHost = data.isHost;
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('gameContainer').style.display = 'block';
-            
-            if (isHost) {
-                document.getElementById('startButton').style.display = 'block';
-                document.getElementById('endButton').style.display = 'block';
-            }
-        }
+       function createRoom() {
+           const playerName = document.getElementById('playerName').value.trim();
+           if (!playerName) {
+               showError('닉네임을 입력해주세요');
+               return;
+           }
 
-        function updateGameState(state) {
+           playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+           sendToServer({
+               type: 'createRoom',
+               playerId: playerId,
+               playerName: playerName
+           });
+       }
+
+       function joinRoom() {
+           const playerName = document.getElementById('playerName').value.trim();
+           const roomCode = document.getElementById('room-code-input').value.trim();
+           
+           if (!playerName) {
+               showError('닉네임을 입력해주세요');
+               return;
+           }
+           if (!roomCode) {
+               showError('방 코드를 입력해주세요');
+               return;
+           }
+
+           playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+           sendToServer({
+               type: 'joinRoom',
+               roomCode: roomCode,
+               playerId: playerId,
+               playerName: playerName
+           });
+       }
+
+       function leaveRoom() {
+           if (currentRoom) {
+               sendToServer({
+                   type: 'leaveRoom',
+                   playerId: playerId,
+                   roomCode: currentRoom
+               });
+           }
+           showLoginContainer();
+       }
+
+       function sendToServer(data) {
+           if (ws && ws.readyState === WebSocket.OPEN) {
+               ws.send(JSON.stringify(data));
+           } else {
+               showError('서버에 연결되어 있지 않습니다');
+           }
+       }
+
+       function showLoginContainer() {
+           document.getElementById('loginContainer').style.display = 'block';
+           document.getElementById('gameContainer').style.display = 'none';
+           document.getElementById('playerName').value = '';
+           document.getElementById('room-code-input').value = '';
+           currentRoom = null;
+           isHost = false;
+       }
+
+       function showGameContainer() {
+           document.getElementById('loginContainer').style.display = 'none';
+           document.getElementById('gameContainer').style.display = 'block';
+           document.getElementById('startButton').style.display = isHost ? 'block' : 'none';
+           document.getElementById('endButton').style.display = isHost ? 'block' : 'none';
+       }
+
+       function showError(message) {
+           const errorElement = document.getElementById('error-message');
+           errorElement.textContent = message;
+           setTimeout(() => {
+               errorElement.textContent = '';
+           }, 3000);
+       }
+
+       function updateGameState(state) {
+            isHost = state.isHost;
+            document.getElementById('startButton').style.display = isHost ? 'block' : 'none';
+            document.getElementById('endButton').style.display = isHost ? 'block' : 'none';
+
             const playersList = document.getElementById('players');
             playersList.innerHTML = '';
-
+            
             state.players.forEach(player => {
                 const li = document.createElement('li');
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = player.name + ' ';
-                li.appendChild(nameSpan);
-
-                if (player.hasCards) {
+                const playerInfo = document.createElement('span');
+                playerInfo.textContent = `${player.name} ${player.isHost ? '(방장)' : ''}`;
+                
+                const cardIndicator = document.createElement('div');
+                cardIndicator.className = 'player-card-indicator';
+                
+                if (player.hasCards && player.id !== playerId) {
                     for (let i = 0; i < 2; i++) {
-                        const img = document.createElement('img');
-                        img.src = 'image/0.png';
-                        img.style.width = '20px';
-                        img.style.height = '30px';
-                        img.style.marginLeft = '5px';
-                        li.appendChild(img);
+                        const cardImg = document.createElement('img');
+                        // 게임이 진행중이면 뒷면(0.png), 아니면 앞면(실제 카드) 표시
+                        cardImg.src = `image/${state.gameStarted ? '0' : player.cards[i]}.png`;
+                        cardIndicator.appendChild(cardImg);
                     }
                 }
+                
+                li.appendChild(playerInfo);
+                li.appendChild(cardIndicator);
                 playersList.appendChild(li);
             });
-
-            const startButton = document.getElementById('startButton');
-            if (isHost) {
-                startButton.disabled = state.gameStarted;
-            }
         }
 
-        function calculatePokkal(cards) {
-            if (cards.length !== 2) return "카드 2장이 필요합니다";
-            
-            const card1 = cards[0];
-            const card2 = cards[1];
-            
-            const month1 = Math.floor(card1 / 100) || card1;
-            const month2 = Math.floor(card2 / 100) || card2;
-            const months = [month1, month2].sort((a, b) => a - b);
-            
-            if ((card1 === 300 && card2 === 800) || (card1 === 800 && card2 === 300)) return "38광땡";
-            if ((card1 === 100 && card2 === 300) || (card1 === 300 && card2 === 100)) return "13광땡";
-            if ((card1 === 100 && card2 === 800) || (card1 === 800 && card2 === 100)) return "18광땡";
-            
-            if ((month1 === 4 && month2 === 9) || (month1 === 9 && month2 === 4)) {
-                if (card1 !== 300 && card1 !== 800 && card2 !== 300 && card2 !== 800) {
-                    return "멍텅구리구사";
-                }
-                return "구사";
-            }
+       function calculatePokkal(cards) {
+           if (cards.length !== 2) return "카드 2장이 필요합니다";
+           
+           const card1 = cards[0];
+           const card2 = cards[1];
+           
+           const month1 = Math.floor(card1 / 100) || card1;
+           const month2 = Math.floor(card2 / 100) || card2;
+           const months = [month1, month2].sort((a, b) => a - b);
+           
+           if ((card1 === 300 && card2 === 800) || (card1 === 800 && card2 === 300)) return "38광땡";
+           if ((card1 === 100 && card2 === 300) || (card1 === 300 && card2 === 100)) return "13광땡";
+           if ((card1 === 100 && card2 === 800) || (card1 === 800 && card2 === 100)) return "18광땡";
+           
+           if ((month1 === 4 && month2 === 9) || (month1 === 9 && month2 === 4)) {
+               if (card1 !== 300 && card1 !== 800 && card2 !== 300 && card2 !== 800) {
+                   return "멍텅구리구사";
+               }
+               return "구사";
+           }
 
-            if ((month1 === 4 && month2 === 7) || (month1 === 7 && month2 === 4)) return "47암행어사";
-            if ((month1 === 3 && month2 === 7) || (month1 === 7 && month2 === 3)) return "37땡잡이";
-            
-            if (month1 === month2) return month1 + "땡";
-            
-            if (months[0] === 1) {
-                if (months[1] === 2) return "알리";
-                if (months[1] === 4) return "독사";
-                if (months[1] === 9) return "구삥";
-                if (months[1] === 10) return "장삥";
-            }
-            
-            const kut = (month1 + month2) % 10;
-            if (kut === 9) return "갑오";
-            if (months[0] === 4) {
-                if (months[1] === 10) return "장사";
-                if (months[1] === 6) return "세륙";
-            }
-            
-            if (kut === 0) return "망통";
-            return kut + "끗";
-        }
+           if ((month1 === 4 && month2 === 7) || (month1 === 7 && month2 === 4)) return "47암행어사";
+           if ((month1 === 3 && month2 === 7) || (month1 === 7 && month2 === 3)) return "37땡잡이";
+           
+           if (month1 === month2) return month1 + "땡";
+           
+           if (months[0] === 1) {
+               if (months[1] === 2) return "알리";
+               if (months[1] === 4) return "독사";
+               if (months[1] === 9) return "구삥";
+               if (months[1] === 10) return "장삥";
+           }
+           
+           const kut = (month1 + month2) % 10;
+           if (kut === 9) return "갑오";
+           if (months[0] === 4) {
+               if (months[1] === 10) return "장사";
+               if (months[1] === 6) return "세륙";
+           }
+           
+           if (kut === 0) return "망통";
+           return kut + "끗";
+       }
 
-        function startGame() {
-            ws.send(JSON.stringify({
-                type: 'start',
-                playerId: playerId
-            }));
+       function updatePokkalHighlight(pokkal) {
+           document.querySelectorAll('.pokkal-list li').forEach(li => {
+               li.classList.remove('current');
+           });
+
+           if (pokkal) {
+               const pokkalElement = document.querySelector(`.pokkal-list li[data-pokkal="${pokkal}"]`);
+               if (pokkalElement) {
+                   pokkalElement.classList.add('current');
+               }
+           }
+       }
+
+       function togglePokkal() {
+           const content = document.querySelector('.pokkal-content');
+           content.classList.toggle('hidden');
+       }
+
+       function startGame() {
+            gameEnded = false;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'start',
+                    playerId: playerId,
+                    roomCode: currentRoom
+                }));
+            }
         }
 
         function endGame() {
-            ws.send(JSON.stringify({
-                type: 'end',
-                playerId: playerId
-            }));
-        }
-
-        function updatePokkalHighlight(pokkal) {
-            document.querySelectorAll('.pokkal-list li').forEach(li => {
-                li.classList.remove('current');
-            });
-
-            if (pokkal) {
-                const pokkalElement = document.querySelector(`.pokkal-list li[data-pokkal="${pokkal}"]`);
-                if (pokkalElement) {
-                    pokkalElement.classList.add('current');
-                }
+            gameEnded = true;
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'end',
+                    playerId: playerId,
+                    roomCode: currentRoom
+                }));
             }
         }
 
-        function togglePokkal() {
-            const content = document.querySelector('.pokkal-content');
-            content.classList.toggle('hidden');
-        }
+       window.addEventListener('load', () => {
+           preloadImages();
+           connectWebSocket();
 
-        window.addEventListener('load', () => {
-            preloadImages();
-            connectWebSocket();
-        });
-    </script>
+           document.getElementById('room-code-input').addEventListener('input', (e) => {
+               e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+           });
+
+           document.getElementById('playerName').addEventListener('keypress', (e) => {
+               if (e.key === 'Enter') {
+                   const roomCode = document.getElementById('room-code-input').value;
+                   if (roomCode) {
+                       joinRoom();
+                   } else {
+                       createRoom();
+                   }
+               }
+           });
+
+           document.getElementById('room-code-input').addEventListener('keypress', (e) => {
+               if (e.key === 'Enter') {
+                   joinRoom();
+               }
+           });
+       });
+   </script>
 </body>
 </html>

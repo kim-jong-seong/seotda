@@ -1,56 +1,24 @@
-// server.js
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
+const path = require('path');
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-const path = require('path');
-
-// 정적 파일 제공
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 기본 라우트
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+const rooms = new Map();
 
 class CardGame {
-    constructor() {
+    constructor(roomCode) {
+        this.roomCode = roomCode;
         this.MAX_PLAYERS = 10;
         this.CARDS_PER_PLAYER = 2;
         this.cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
         this.players = new Map();
         this.gameStarted = false;
         this.hostId = null;
-    }
-
-    addPlayer(ws, playerId, playerName) {
-        if (this.gameStarted) {
-            return { error: "게임이 이미 시작되었습니다." };
-        }
-
-        if (this.players.size >= this.MAX_PLAYERS) {
-            return { error: "최대 플레이어 수에 도달했습니다." };
-        }
-
-        // 첫 번째 접속자를 방장으로 지정
-        if (this.players.size === 0) {
-            this.hostId = playerId;
-        }
-
-        this.players.set(playerId, {
-            ws,
-            name: playerName,
-            cards: []
-        });
-
-        return {
-            success: true,
-            message: `${playerName}님이 게임에 참가하셨습니다. (현재 인원: ${this.players.size}명)`,
-            isHost: playerId === this.hostId
-        };
     }
 
     startGame(hostId) {
@@ -79,110 +47,200 @@ class CardGame {
             playerInfo.cards = shuffledCards.slice(cardIndex, cardIndex + this.CARDS_PER_PLAYER);
             cardIndex += this.CARDS_PER_PLAYER;
 
-            // 각 플레이어에게 자신의 카드 정보 전송
-            const message = JSON.stringify({
-                type: 'cards',
-                cards: playerInfo.cards
-            });
-            playerInfo.ws.send(message);
+            if (playerInfo.ws.readyState === WebSocket.OPEN) {
+                playerInfo.ws.send(JSON.stringify({
+                    type: 'cards',
+                    cards: playerInfo.cards
+                }));
+            }
         }
 
-        // 전체 게임 상태 업데이트를 모든 플레이어에게 브로드캐스트
         this.broadcastGameState();
-    }
-
-    broadcastGameState() {
-        const gameState = {
-            type: 'gameState',
-            totalPlayers: this.players.size,
-            gameStarted: this.gameStarted,
-            players: Array.from(this.players.entries()).map(([id, info]) => ({
-                id,
-                name: info.name,
-                hasCards: info.cards.length > 0
-            }))
-        };
-
-        const message = JSON.stringify(gameState);
-        for (let [_, playerInfo] of this.players) {
-            playerInfo.ws.send(message);
-        }
     }
 
     endGame(hostId) {
         if (hostId !== this.hostId) {
             return { error: "방장만 게임을 종료할 수 있습니다." };
         }
-
+        
         this.gameStarted = false;
-        for (let [_, playerInfo] of this.players) {
-            playerInfo.cards = [];
-        }
-
         this.broadcastGameState();
-        return { success: true, message: "게임이 종료되었습니다." };
+        return { success: true };
     }
 
-    removePlayer(playerId) {
-        this.players.delete(playerId);
-        
-        // 방장이 나갔을 경우 새로운 방장 지정
-        if (playerId === this.hostId && this.players.size > 0) {
-            this.hostId = this.players.keys().next().value;
-        }
+    broadcastGameState() {
+        const gameState = {
+            type: 'gameState',
+            roomCode: this.roomCode,
+            totalPlayers: this.players.size,
+            gameStarted: this.gameStarted,
+            players: Array.from(this.players.entries()).map(([id, info]) => ({
+                id,
+                name: info.name,
+                hasCards: info.cards?.length > 0,
+                isHost: id === this.hostId,
+                cards: info.cards // 항상 카드 정보 전송
+            }))
+        };
 
-        this.broadcastGameState();
+        for (let [playerId, playerInfo] of this.players) {
+            if (playerInfo.ws.readyState === WebSocket.OPEN) {
+                playerInfo.ws.send(JSON.stringify({
+                    ...gameState,
+                    isHost: playerId === this.hostId
+                }));
+            }
+        }
     }
 }
 
-const game = new CardGame();
+function generateRoomCode() {
+    let code;
+    do {
+        code = Math.floor(1000 + Math.random() * 9000).toString();
+    } while (rooms.has(code));
+    return code;
+}
 
 wss.on('connection', (ws) => {
     console.log('새로운 클라이언트가 연결되었습니다.');
 
     ws.on('message', (message) => {
         const data = JSON.parse(message);
-
+        console.log('Received:', data);
+        
         switch (data.type) {
-            case 'join':
-                const joinResult = game.addPlayer(ws, data.playerId, data.playerName);
+            case 'createRoom': {
+                const roomCode = generateRoomCode();
+                const game = new CardGame(roomCode);
+                rooms.set(roomCode, game);
+                game.hostId = data.playerId;
+                game.players.set(data.playerId, { 
+                    ws: ws,
+                    name: data.playerName,
+                    cards: []
+                });
+                
+                ws.send(JSON.stringify({
+                    type: 'roomCreated',
+                    roomCode: roomCode,
+                    playerId: data.playerId,
+                    isHost: true
+                }));
+                game.broadcastGameState();
+                break;
+            }
+
+            case 'joinRoom': {
+                const game = rooms.get(data.roomCode);
+                if (!game) {
+                    ws.send(JSON.stringify({
+                        type: 'error',
+                        message: '존재하지 않는 방 코드입니다.'
+                    }));
+                    return;
+                }
+
+                if (game.gameStarted) {
+                    ws.send(JSON.stringify({
+                        type: 'error',
+                        message: '이미 게임이 시작되었습니다.'
+                    }));
+                    return;
+                }
+
+                if (game.players.size >= game.MAX_PLAYERS) {
+                    ws.send(JSON.stringify({
+                        type: 'error',
+                        message: '방이 가득 찼습니다.'
+                    }));
+                    return;
+                }
+
+                game.players.set(data.playerId, {
+                    ws: ws,
+                    name: data.playerName,
+                    cards: []
+                });
+
                 ws.send(JSON.stringify({
                     type: 'joinResponse',
-                    ...joinResult
+                    roomCode: data.roomCode,
+                    playerId: data.playerId,
+                    isHost: data.playerId === game.hostId
                 }));
-                if (joinResult.success) {
-                    game.broadcastGameState();
-                }
+                
+                game.broadcastGameState();
                 break;
+            }
 
-            case 'start':
-                const startResult = game.startGame(data.playerId);
-                if (startResult.error) {
-                    ws.send(JSON.stringify({
-                        type: 'error',
-                        message: startResult.error
-                    }));
+            case 'start': {
+                const game = rooms.get(data.roomCode);
+                if (game) {
+                    const result = game.startGame(data.playerId);
+                    if (result.error) {
+                        ws.send(JSON.stringify({
+                            type: 'error',
+                            message: result.error
+                        }));
+                    }
                 }
                 break;
+            }
 
-            case 'end':
-                const endResult = game.endGame(data.playerId);
-                if (endResult.error) {
-                    ws.send(JSON.stringify({
-                        type: 'error',
-                        message: endResult.error
-                    }));
+            case 'end': {
+                const game = rooms.get(data.roomCode);
+                if (game) {
+                    const result = game.endGame(data.playerId);
+                    if (result.error) {
+                        ws.send(JSON.stringify({
+                            type: 'error',
+                            message: result.error
+                        }));
+                    }
                 }
                 break;
+            }
+
+            case 'leaveRoom': {
+                const game = rooms.get(data.roomCode);
+                if (game) {
+                    game.players.delete(data.playerId);
+                    
+                    if (data.playerId === game.hostId && game.players.size > 0) {
+                        game.hostId = Array.from(game.players.keys())[0];
+                    }
+                    
+                    if (game.players.size === 0) {
+                        rooms.delete(data.roomCode);
+                    } else {
+                        game.broadcastGameState();
+                    }
+                }
+                
+                ws.send(JSON.stringify({
+                    type: 'leftRoom'
+                }));
+                break;
+            }
         }
     });
 
     ws.on('close', () => {
-        // 연결이 끊긴 플레이어 찾기
-        for (let [playerId, playerInfo] of game.players) {
-            if (playerInfo.ws === ws) {
-                game.removePlayer(playerId);
-                break;
+        for (let [roomCode, game] of rooms) {
+            for (let [playerId, playerInfo] of game.players) {
+                if (playerInfo.ws === ws) {
+                    game.players.delete(playerId);
+                    if (playerId === game.hostId && game.players.size > 0) {
+                        game.hostId = Array.from(game.players.keys())[0];
+                    }
+                    if (game.players.size === 0) {
+                        rooms.delete(roomCode);
+                    } else {
+                        game.broadcastGameState();
+                    }
+                    break;
+                }
             }
         }
     });
