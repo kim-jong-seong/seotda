@@ -307,15 +307,16 @@
         <div class="error-message" id="error-message"></div>
     </div>
 
-    <div style="max-width: 400px; margin: 20px auto;">
+    <!-- 로그인 화면용 광고 컨테이너 -->
+    <div id="loginAdsContainer" style="max-width: 400px; margin: 20px auto;">
         <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="ca-pub-3210745097147760"
-             data-ad-slot="2152150532"
-             data-ad-format="auto"
-             data-full-width-responsive="true"></ins>
+            style="display:block"
+            data-ad-client="ca-pub-3210745097147760"
+            data-ad-slot="2152150532"
+            data-ad-format="auto"
+            data-full-width-responsive="true"></ins>
         <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
+            (adsbygoogle = window.adsbygoogle || []).push({});
         </script>
     </div>
 
@@ -325,15 +326,16 @@
             <button onclick="leaveRoom()" style="width: auto; margin: 0; padding: 8px 16px;">나가기</button>
         </div>
 
-        <div style="margin: 20px 0;">
+        <!-- 게임 시작 버튼 위 광고 -->
+        <div id="gameTopAd" style="display: none; margin: 20px 0;">
             <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-3210745097147760"
-                 data-ad-slot="3795602366"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
+                style="display:block"
+                data-ad-client="ca-pub-3210745097147760"
+                data-ad-slot="3795602366"
+                data-ad-format="auto"
+                data-full-width-responsive="true"></ins>
             <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
+                (adsbygoogle = window.adsbygoogle || []).push({});
             </script>
         </div>
 
@@ -354,15 +356,16 @@
             </div>
         </div>
 
-        <div style="margin: 20px 0;">
+        <!-- 족보 위 광고 -->
+        <div id="gameBottomAd" style="display: none; margin: 20px 0;">
             <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-client="ca-pub-3210745097147760"
-                 data-ad-slot="3616473115"
-                 data-ad-format="auto"
-                 data-full-width-responsive="true"></ins>
+                style="display:block"
+                data-ad-client="ca-pub-3210745097147760"
+                data-ad-slot="3616473115"
+                data-ad-format="auto"
+                data-full-width-responsive="true"></ins>
             <script>
-                 (adsbygoogle = window.adsbygoogle || []).push({});
+                (adsbygoogle = window.adsbygoogle || []).push({});
             </script>
         </div>
 
@@ -720,6 +723,9 @@
        function showLoginContainer() {
            document.getElementById('loginContainer').style.display = 'block';
            document.getElementById('gameContainer').style.display = 'none';
+           document.getElementById('loginAdsContainer').style.display = 'block';
+           document.getElementById('gameTopAd').style.display = 'none';
+           document.getElementById('gameBottomAd').style.display = 'none';
            document.getElementById('playerName').value = '';
            document.getElementById('room-code-input').value = '';
            currentRoom = null;
@@ -730,6 +736,9 @@
        function showGameContainer() {
            document.getElementById('loginContainer').style.display = 'none';
            document.getElementById('gameContainer').style.display = 'block';
+           document.getElementById('loginAdsContainer').style.display = 'none';
+           document.getElementById('gameTopAd').style.display = 'block';
+           document.getElementById('gameBottomAd').style.display = 'block';
            document.getElementById('startButton').style.display = isHost ? 'block' : 'none';
            document.getElementById('endButton').style.display = isHost ? 'block' : 'none';
 
