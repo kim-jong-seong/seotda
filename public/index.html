@@ -555,7 +555,7 @@
 
        function connectWebSocket() {
            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-           const wsUrl = `${wsProtocol}//${window.location.hostname}:5000`;
+           const wsUrl = `${wsProtocol}//${window.location.host}`;
            ws = new WebSocket(wsUrl);
 
            ws.onopen = () => {
