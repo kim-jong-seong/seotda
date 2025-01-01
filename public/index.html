@@ -3,7 +3,7 @@
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-   <title>섯다</title>
+   <title>섯다 시뮬레이터</title>
    <style>
     * {
         box-sizing: border-box;
@@ -292,7 +292,7 @@
 </head>
 <body>
     <div id="loginContainer">
-        <h2>게임 참가</h2>
+        <h2>섯다 시뮬레이터</h2>
         <input type="text" id="playerName" placeholder="닉네임을 입력하세요">
         <input type="text" id="room-code-input" placeholder="방 코드" maxlength="4">
         <button onclick="createRoom()">방 만들기</button>
@@ -317,6 +317,10 @@
         <div id="myCards">
             <h3>내 카드</h3>
             <div id="cardContainer"></div>
+            <div id="cardInstructions" style="margin-top: 16px; color: #666; font-size: 14px; text-align: center;">
+                <p style="margin: 4px 0;">1. 첫 번째 패 오픈 - 패 터치</p>
+                <p style="margin: 4px 0;">2. 두 번째 패 오픈 - 패 터치 후 아래로 드래그</p>
+            </div>
         </div>
 
         <div id="pokkalTab">
@@ -375,6 +379,7 @@
        let flippedCards = 0;
        let cachedPokkal = null;
        let gameEnded = false;
+       let isFirstGame = true; // 첫 게임 여부를 추적하는 변수 추가
 
        function preloadImages() {
            const images = [];
@@ -598,40 +603,56 @@
        }
 
        function createRoom() {
-           const playerName = document.getElementById('playerName').value.trim();
-           if (!playerName) {
-               showError('닉네임을 입력해주세요');
-               return;
-           }
+            const playerName = document.getElementById('playerName').value.trim();
+            if (!playerName) {
+                showError('닉네임을 입력해주세요');
+                return;
+            }
 
-           playerId = 'player_' + Math.random().toString(36).substr(2, 9);
-           sendToServer({
-               type: 'createRoom',
-               playerId: playerId,
-               playerName: playerName
-           });
+            // 족보 하이라이트 초기화
+            updatePokkalHighlight(null);
+            // 카드 컨테이너 초기화
+            const cardContainer = document.getElementById('cardContainer');
+            cardContainer.innerHTML = '';
+            // 캐시된 족보 초기화
+            cachedPokkal = null;
+
+            playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            sendToServer({
+                type: 'createRoom',
+                playerId: playerId,
+                playerName: playerName
+            });
        }
 
-       function joinRoom() {
-           const playerName = document.getElementById('playerName').value.trim();
-           const roomCode = document.getElementById('room-code-input').value.trim();
+        function joinRoom() {
+            const playerName = document.getElementById('playerName').value.trim();
+            const roomCode = document.getElementById('room-code-input').value.trim();
            
-           if (!playerName) {
-               showError('닉네임을 입력해주세요');
-               return;
-           }
-           if (!roomCode) {
-               showError('방 코드를 입력해주세요');
-               return;
-           }
+            if (!playerName) {
+                showError('닉네임을 입력해주세요');
+                return;
+            }
+            if (!roomCode) {
+                showError('방 코드를 입력해주세요');
+                return;
+            }
 
-           playerId = 'player_' + Math.random().toString(36).substr(2, 9);
-           sendToServer({
-               type: 'joinRoom',
-               roomCode: roomCode,
-               playerId: playerId,
-               playerName: playerName
-           });
+            // 족보 하이라이트 초기화
+            updatePokkalHighlight(null);
+            // 카드 컨테이너 초기화
+            const cardContainer = document.getElementById('cardContainer');
+            cardContainer.innerHTML = '';
+            // 캐시된 족보 초기화
+            cachedPokkal = null;
+
+            playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            sendToServer({
+                type: 'joinRoom',
+                roomCode: roomCode,
+                playerId: playerId,
+                playerName: playerName
+            });
        }
 
        function leaveRoom() {
@@ -660,6 +681,7 @@
            document.getElementById('room-code-input').value = '';
            currentRoom = null;
            isHost = false;
+           isFirstGame = true; // 로그인 화면으로 돌아갈 때 첫 게임 상태 초기화
        }
 
        function showGameContainer() {
@@ -667,6 +689,11 @@
            document.getElementById('gameContainer').style.display = 'block';
            document.getElementById('startButton').style.display = isHost ? 'block' : 'none';
            document.getElementById('endButton').style.display = isHost ? 'block' : 'none';
+
+           // 입장 시 카드 설명 표시
+           if (document.getElementById('cardInstructions')) {
+               document.getElementById('cardInstructions').style.display = 'block';
+           }
        }
 
        function showError(message) {
@@ -679,8 +706,21 @@
 
        function updateGameState(state) {
             isHost = state.isHost;
+            isFirstGame = state.isFirstGame; // 서버에서 받은 첫 게임 상태 적용
             document.getElementById('startButton').style.display = isHost ? 'block' : 'none';
             document.getElementById('endButton').style.display = isHost ? 'block' : 'none';
+
+            // 게임이 시작되었고 첫 게임이 아닐 때만 설명 숨기기
+            if (document.getElementById('cardInstructions')) {
+                document.getElementById('cardInstructions').style.display = 
+                    isFirstGame ? 'block' : 'none';
+            }
+
+            // 게임이 시작되면 모든 플레이어의 족보 하이라이트 초기화
+            if (state.gameStarted) {
+                updatePokkalHighlight(null);
+                cachedPokkal = null;
+            }
 
             const playersList = document.getElementById('players');
             playersList.innerHTML = '';
@@ -772,6 +812,7 @@
 
        function startGame() {
             gameEnded = false;
+
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'start',
@@ -783,6 +824,15 @@
 
         function endGame() {
             gameEnded = true;
+
+            // 첫 게임이 끝났을 때 설명 숨기기
+            if (isFirstGame) {
+                if (document.getElementById('cardInstructions')) {
+                    document.getElementById('cardInstructions').style.display = 'none';
+                }
+                isFirstGame = false;
+            }
+            
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
                     type: 'end',

@@ -19,6 +19,7 @@ class CardGame {
         this.players = new Map();
         this.gameStarted = false;
         this.hostId = null;
+        this.firstGamePlayers = new Set(); // 각 플레이어의 첫 게임 여부를 추적
     }
 
     startGame(hostId) {
@@ -64,6 +65,12 @@ class CardGame {
         }
         
         this.gameStarted = false;
+
+        // 게임에 참여한 모든 플레이어를 firstGamePlayers에서 제거
+        for (let playerId of this.players.keys()) {
+            this.firstGamePlayers.add(playerId);
+        }
+
         this.broadcastGameState();
         return { success: true };
     }
@@ -79,6 +86,7 @@ class CardGame {
                 name: info.name,
                 hasCards: info.cards?.length > 0,
                 isHost: id === this.hostId,
+                isFirstGame: !this.firstGamePlayers.has(id),
                 cards: info.cards // 항상 카드 정보 전송
             }))
         };
@@ -87,7 +95,8 @@ class CardGame {
             if (playerInfo.ws.readyState === WebSocket.OPEN) {
                 playerInfo.ws.send(JSON.stringify({
                     ...gameState,
-                    isHost: playerId === this.hostId
+                    isHost: playerId === this.hostId,
+                    isFirstGame: !this.firstGamePlayers.has(playerId)
                 }));
             }
         }
