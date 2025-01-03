@@ -10,296 +10,281 @@
     <meta property="og:url" content="https://seotda.site">
     <title>섯다 시뮬레이터 - 무료 온라인 실시간 웹 섯다 게임</title>
    <style>
-    * {
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-    }
+       * {
+           box-sizing: border-box;
+           -webkit-tap-highlight-color: transparent;
+       }
 
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        margin: 0;
-        padding: 16px;
-        background-color: #f7f8fa;
-        max-width: 100%;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        min-height: 100vh;
-    }
+       body {
+           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+           margin: 0;
+           padding: 16px;
+           background-color: #f7f8fa;
+           max-width: 100%;
+           -webkit-touch-callout: none;
+           -webkit-user-select: none;
+           min-height: 100vh;
+       }
 
-    /* Login Container Styles */
-    #loginContainer {
-        max-width: 400px;
-        margin: 20px auto;
-        padding: 24px;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
+       /* 공통 컨테이너 스타일 */
+       #aboutSeotdaContent, #loginContainer, #playersList, #myCards, #pokkalTab {
+           max-width: 500px;
+           width: 100%;
+           margin: 20px auto;
+           background: white;
+           border-radius: 16px;
+           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+       }
 
-    #loginContainer h2 {
-        margin: 0 0 24px 0;
-        color: #2d3748;
-        text-align: center;
-        font-size: 24px;
-    }
+       #loginContainer {
+           padding: 24px;
+       }
 
-    input[type="text"] {
-        width: 100%;
-        padding: 12px 16px;
-        margin-bottom: 16px;
-        border: 2px solid #e2e8f0;
-        border-radius: 8px;
-        font-size: 16px;
-        transition: border-color 0.2s;
-    }
+       #loginContainer h2 {
+           margin: 0 0 24px 0;
+           color: #2d3748;
+           text-align: center;
+           font-size: 24px;
+       }
 
-    input[type="text"]:focus {
-        outline: none;
-        border-color: #4299e1;
-    }
+       input[type="text"] {
+           width: 100%;
+           padding: 12px 16px;
+           margin-bottom: 16px;
+           border: 2px solid #e2e8f0;
+           border-radius: 8px;
+           font-size: 16px;
+           transition: border-color 0.2s;
+       }
 
-    button {
-        width: 100%;
-        padding: 12px 20px;
-        margin-bottom: 12px;
-        border: none;
-        border-radius: 8px;
-        background-color: #4299e1;
-        color: white;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
+       input[type="text"]:focus {
+           outline: none;
+           border-color: #4299e1;
+       }
 
-    button:active {
-        background-color: #3182ce;
-        transform: translateY(1px);
-    }
+       button {
+           width: 100%;
+           padding: 12px 20px;
+           margin-bottom: 12px;
+           border: none;
+           border-radius: 8px;
+           background-color: #4299e1;
+           color: white;
+           font-size: 16px;
+           font-weight: 600;
+           cursor: pointer;
+           transition: background-color 0.2s;
+       }
 
-    /* Game Container Styles */
-    #gameContainer {
-        display: none;
-        max-width: 600px;
-        margin: 0 auto;
-    }
+       button:active {
+           background-color: #3182ce;
+           transform: translateY(1px);
+       }
 
-    .room-info {
-        background-color: white;
-        padding: 16px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
+       /* Game Container */
+       #gameContainer {
+           display: none;
+           max-width: 500px;
+           margin: 0 auto;
+       }
 
-    .room-code {
-        font-size: 18px;
-        font-weight: bold;
-        color: #2d3748;
-    }
+       .room-info {
+           max-width: 500px;
+           width: 100%;
+           background-color: white;
+           padding: 16px;
+           border-radius: 12px;
+           margin-bottom: 20px;
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+       }
 
-    #startButton, #endButton {
-        display: none;
-        margin: 8px 0;
-    }
+       .room-code {
+           font-size: 18px;
+           font-weight: bold;
+           color: #2d3748;
+       }
 
-    /* Players List Styles */
-    #playersList {
-        background: white;
-        padding: 16px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
+       #startButton, #endButton {
+           display: none;
+           margin: 8px 0;
+       }
 
-    #playersList h3 {
-        margin: 0 0 12px 0;
-        color: #2d3748;
-    }
+       /* Players List */
+       #playersList {
+           padding: 16px;
+           margin-bottom: 20px;
+       }
 
-    #players {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
+       #playersList h3 {
+           margin: 0 0 12px 0;
+           color: #2d3748;
+       }
 
-    .player-card-indicator {
-        display: inline-flex;
-        margin-left: 8px;
-        gap: 4px;
-    }
+       #players {
+           list-style: none;
+           padding: 0;
+           margin: 0;
+       }
 
-    .player-card-indicator img {
-        width: 40px;
-        height: 60px;
-        border-radius: 2px;
-    }
+       .player-card-indicator {
+           display: inline-flex;
+           margin-left: 8px;
+           gap: 4px;
+       }
 
-    #players li {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 15px;
-    }
+       .player-card-indicator img {
+           width: 40px;
+           height: 60px;
+           border-radius: 2px;
+       }
 
-    #players li:last-child {
-        border-bottom: none;
-    }
+       #players li {
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+           margin: 15px;
+       }
 
-    /* Card Container Styles */
-    #myCards {
-        background: white;
-        padding: 16px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
+       /* Card Styles */
+       #myCards {
+           padding: 16px;
+           margin-bottom: 20px;
+       }
 
-    #myCards h3 {
-        margin: 0 0 12px 0;
-        color: #2d3748;
-    }
+       #myCards h3 {
+           margin: 0 0 12px 0;
+           color: #2d3748;
+       }
 
-    #cardContainer {
-        position: relative;
-        height: 180px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 16px;
-    }
+       #cardContainer {
+           position: relative;
+           height: 180px;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           gap: 16px;
+       }
 
-    .card {
-        position: absolute;
-        touch-action: none;
-    }
+       .card {
+           position: absolute;
+           touch-action: none;
+       }
 
-    .card img {
-        width: 120px;
-        height: auto;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
+       .card img {
+           width: 100px;
+           height: 150px;
+           border-radius: 8px;
+           box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+       }
 
-    .card.final {
-        position: relative;
-    }
+       .card.final {
+           position: relative;
+       }
 
-    /* Pokkal Tab Styles */
-    #pokkalTab {
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
+       /* Pokkal Styles */
+       #pokkalTab {
+           overflow: hidden;
+           margin-bottom: 20px;
+       }
 
-    .tab-title {
-        padding: 16px;
-        background-color: #2d3748;
-        color: white;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+       .tab-title {
+           padding: 16px;
+           background-color: #2d3748;
+           color: white;
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+       }
 
-    .toggle-button {
-        background-color: transparent;
-        border: 1px solid white;
-        padding: 8px 16px;
-        color: white;
-        font-size: 14px;
-        margin: 0;
-        width: auto;
-    }
+       .toggle-button {
+           background-color: transparent;
+           border: 1px solid white;
+           padding: 8px 16px;
+           color: white;
+           font-size: 14px;
+           margin: 0;
+           width: auto;
+       }
 
-    .pokkal-content {
-        transition: max-height 0.3s ease-out;
-        max-height: 2000px;
-        overflow: hidden;
-    }
+       .pokkal-content {
+           transition: max-height 0.3s ease-out;
+           max-height: 2000px;
+           overflow: hidden;
+       }
 
-    .pokkal-content.hidden {
-        max-height: 0;
-    }
+       .pokkal-content.hidden {
+           max-height: 0;
+       }
 
-    .pokkal-list {
-        list-style: none;
-        padding: 16px;
-        margin: 0;
-    }
+       .pokkal-list {
+           list-style: none;
+           padding: 16px;
+           margin: 0;
+       }
 
-    .pokkal-header {
-        background-color: #4a5568;
-        color: white;
-        padding: 8px 12px;
-        margin: 16px -16px 8px -16px;
-        font-weight: bold;
-    }
+       .pokkal-header {
+           background-color: #4a5568;
+           color: white;
+           padding: 8px 12px;
+           margin: 16px -16px 8px -16px;
+           font-weight: bold;
+       }
 
-    .pokkal-list li {
-        padding: 12px 0;
-        border-bottom: 1px solid #edf2f7;
-        color: #4a5568;
-    }
+       .pokkal-list li {
+           padding: 12px 0;
+           border-bottom: 1px solid #edf2f7;
+           color: #4a5568;
+       }
 
-    .pokkal-list li.current {
-        background-color: #ebf8ff;
-        margin: 0 -16px;
-        padding: 12px 16px;
-        border-left: 4px solid #4299e1;
-        font-weight: bold;
-    }
+       .pokkal-list li.current {
+           background-color: #ebf8ff;
+           margin: 0 -16px;
+           padding: 12px 16px;
+           border-left: 4px solid #4299e1;
+           font-weight: bold;
+       }
 
-    .error-message {
-        color: #e53e3e;
-        text-align: center;
-        margin: 12px 0;
-        font-size: 14px;
-    }
+       .error-message {
+           color: #e53e3e;
+           text-align: center;
+           margin: 12px 0;
+           font-size: 14px;
+       }
 
-    /* Mobile Optimization */
-    @media (max-width: 480px) {
-        body {
-            padding: 12px;
-        }
+       /* Mobile */
+       @media (max-width: 480px) {
+           body {
+               padding: 12px;
+           }
 
-        .card img {
-            width: 100px;
-            height: auto;
-        }
+           #aboutSeotdaContent, #loginContainer, #playersList, #myCards, #pokkalTab {
+               max-width: 100%;
+               margin: 12px auto;
+           }
 
-        #cardContainer {
-            height: 150px;
-        }
+           .tab-title {
+               font-size: 16px;
+           }
 
-        .tab-title {
-            font-size: 16px;
-        }
+           .toggle-button {
+               padding: 6px 12px;
+               font-size: 13px;
+           }
 
-        .toggle-button {
-            padding: 6px 12px;
-            font-size: 13px;
-        }
-
-        #loginContainer {
-            padding: 20px;
-        }
-
-        input[type="text"] {
-            padding: 10px 14px;
-        }
-    }
-    </style>
+           input[type="text"] {
+               padding: 10px 14px;
+           }
+       }
+   </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3210745097147760"
     crossorigin="anonymous"></script>
 </head>
 <body>
     <!-- '섯다란?' 버튼 및 설명 추가 -->
-    <div style="max-width: 400px; margin: 20px auto; background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="max-width: 500px; margin: 20px auto; background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         <button id="aboutSeotdaButton" class="toggle-button" style="display: block; width: 100%; background-color: #2d3748; color: white; padding: 12px; border: none; border-radius: 16px 16px 0 0; font-size: 16px; cursor: pointer;">
             섯다란?
         </button>
@@ -318,6 +303,37 @@
                     <li>• 알리: 1월과 2월의 조합</li>
                     <li>• 구사: 4월과 9월의 특수한 조합</li>
                 </ul>
+            </div>
+
+            <div class="strategy-section" style="margin: 24px 0; padding: 20px; background: #f8f9fa; border-radius: 12px;">
+                <h3 style="color: #2d3748; margin-top: 0;">🎮 게임 승률 높이는 전략</h3>
+                <ul style="list-style: none; padding-left: 0;">
+                    <li style="margin-bottom: 12px;">• <strong>기본 베팅 전략:</strong> 광땡이나 땡과 같은 강력한 패를 받았을 때는 공격적인 베팅, 끗수가 낮은 패는 신중한 베팅이 필요</li>
+                    <li style="margin-bottom: 12px;">• <strong>상대방 패 읽기:</strong> 베팅 패턴과 행동을 관찰하여 패의 강약 예측</li>
+                    <li style="margin-bottom: 12px;">• <strong>포커페이스 유지:</strong> 좋은 패를 받았을 때도 침착하게 행동하기</li>
+                </ul>
+            </div>
+        
+            <div class="pokkal-section" style="margin: 24px 0; padding: 20px; background: #f8f9fa; border-radius: 12px;">
+                <h3 style="color: #2d3748; margin-top: 0;">🎴 족보 상세 가이드</h3>
+                <div style="margin-bottom: 16px;">
+                    <h4 style="color: #4a5568;">광땡 분석</h4>
+                    <p>38광땡 > 13광땡 > 18광땡 순으로 가치가 높습니다. 광땡은 전체 패에서 약 1%의 확률로 등장하며, 이를 고려한 베팅이 중요합니다.</p>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <h4 style="color: #4a5568;">특수패 활용법</h4>
+                    <p>구사, 땡잡이는 상황에 따라 매우 강력한 패가 될 수 있습니다. 특히 구사는 알리 이하의 패에서만 작동하므로 타이밍이 중요합니다.</p>
+                </div>
+            </div>
+        
+            <div class="tips-section" style="margin: 24px 0; padding: 20px; background: #f8f9fa; border-radius: 12px;">
+                <h3 style="color: #2d3748; margin-top: 0;">💡 실전 꿀팁</h3>
+                <ol style="padding-left: 20px;">
+                    <li style="margin-bottom: 10px">한 판에 올인하지 말고 자금 관리를 신중히 하세요.</li>
+                    <li style="margin-bottom: 10px">상대방의 베팅 패턴을 기록하고 분석하세요.</li>
+                    <li style="margin-bottom: 10px">블러핑은 적절한 타이밍에 사용해야 효과적입니다.</li>
+                    <li style="margin-bottom: 10px">끗수 계산은 빠르고 정확하게 하는 연습이 필요합니다.</li>
+                </ol>
             </div>
     
             <div style="margin-bottom: 24px;">
