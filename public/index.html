@@ -327,7 +327,7 @@
     <!-- '섯다란?' 버튼 및 설명 추가 -->
     <div style="max-width: 500px; margin: 20px auto; background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         <button id="aboutSeotdaButton" class="toggle-button" style="display: block; width: 100%; background-color: #2d3748; color: white; padding: 12px; border: none; border-radius: 16px 16px 0 0; font-size: 16px; cursor: pointer;">
-            섯다란?
+            📌 섯다란? ▲
         </button>
     
         <div id="aboutSeotdaContent" style="display: none; padding: 24px;">
@@ -507,7 +507,7 @@
        aboutButton.addEventListener('click', () => {
            const isHidden = aboutContent.style.display === 'none';
            aboutContent.style.display = isHidden ? 'block' : 'none';
-           aboutButton.textContent = isHidden ? '섯다란? ▼' : '섯다란?';
+           aboutButton.textContent = isHidden ? '📌 섯다란? ▼' : '📌 섯다란? ▲';
        });
 
        function preloadImages() {
