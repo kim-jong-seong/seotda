@@ -437,6 +437,7 @@
 
         <div id="myCards">
             <h3>내 카드</h3>
+            <button id="dieButton" onclick="playerDie()" style="display: none; background-color: #e53e3e;">다이</button>
             <div id="cardContainer"></div>
             <div id="cardInstructions" style="margin-top: 16px; color: #666; font-size: 14px; text-align: center;">
                 <p style="margin: 4px 0;">1. 첫 번째 패 오픈 - 패 터치</p>
@@ -508,6 +509,28 @@
        let cachedPokkal = null;
        let gameEnded = false;
        let isFirstGame = true; // 첫 게임 여부를 추적하는 변수 추가
+       let savedPlayerInfo = null;
+
+       // 페이지 로드 시 저장된 정보 복원
+        window.addEventListener('load', () => {
+            const savedInfo = localStorage.getItem('playerInfo');
+            if (savedInfo) {
+                savedPlayerInfo = JSON.parse(savedInfo);
+                document.getElementById('playerName').value = savedPlayerInfo.name;
+                document.getElementById('room-code-input').value = savedPlayerInfo.roomCode;
+            }
+        });
+
+        // 방 생성/참여 시 정보 저장
+        function savePlayerInfo(name, roomCode, id) {
+            const playerInfo = {
+                name: name,
+                roomCode: roomCode,
+                playerId: id
+            };
+            localStorage.setItem('playerInfo', JSON.stringify(playerInfo));
+            savedPlayerInfo = playerInfo;
+        }
 
        const aboutButton = document.getElementById('aboutSeotdaButton');
        const aboutContent = document.getElementById('aboutSeotdaContent');
@@ -517,6 +540,23 @@
            aboutContent.style.display = isHidden ? 'block' : 'none';
            aboutButton.textContent = isHidden ? '📌 섯다란? ▼' : '📌 섯다란? ▲';
        });
+
+       function playerDie() {
+            if (confirm('정말 죽으시겠습니까?')) {
+                sendToServer({
+                    type: 'die',
+                    playerId: playerId,
+                    roomCode: currentRoom
+                });
+                
+                // 카드 숨기기
+                const cardContainer = document.getElementById('cardContainer');
+                cardContainer.innerHTML = '<p style="text-align: center; color: #666;">처리되었습니다.</p>';
+                
+                // 다이 버튼 비활성화
+                document.getElementById('dieButton').style.display = 'none';
+            }
+        }
 
        function preloadImages() {
            const images = [];
@@ -689,13 +729,17 @@
        }
 
        function connectWebSocket() {
-           const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-           const wsUrl = `${wsProtocol}//${window.location.host}`;
-           ws = new WebSocket(wsUrl);
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${wsProtocol}//${window.location.host}`;
+            ws = new WebSocket(wsUrl);
 
-           ws.onopen = () => {
-               console.log('WebSocket connected');
-           };
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                // 저장된 정보가 있으면 자동 재접속
+                if (savedPlayerInfo && savedPlayerInfo.roomCode) {
+                    joinRoom();
+                }
+            };
 
            ws.onmessage = (event) => {
                const data = JSON.parse(event.data);
@@ -746,26 +790,20 @@
                 return;
             }
 
-            // 족보 하이라이트 초기화
-            updatePokkalHighlight(null);
-            // 카드 컨테이너 초기화
-            const cardContainer = document.getElementById('cardContainer');
-            cardContainer.innerHTML = '';
-            // 캐시된 족보 초기화
-            cachedPokkal = null;
-
-            playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            playerId = savedPlayerInfo?.playerId || 'player_' + Math.random().toString(36).substr(2, 9);
+            savePlayerInfo(playerName, null, playerId);
+            
             sendToServer({
                 type: 'createRoom',
                 playerId: playerId,
                 playerName: playerName
             });
-       }
+        }
 
         function joinRoom() {
             const playerName = document.getElementById('playerName').value.trim();
             const roomCode = document.getElementById('room-code-input').value.trim();
-           
+            
             if (!playerName) {
                 showError('닉네임을 입력해주세요');
                 return;
@@ -775,33 +813,41 @@
                 return;
             }
 
-            // 족보 하이라이트 초기화
-            updatePokkalHighlight(null);
-            // 카드 컨테이너 초기화
-            const cardContainer = document.getElementById('cardContainer');
-            cardContainer.innerHTML = '';
-            // 캐시된 족보 초기화
-            cachedPokkal = null;
-
-            playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+            playerId = savedPlayerInfo?.playerId || 'player_' + Math.random().toString(36).substr(2, 9);
+            savePlayerInfo(playerName, roomCode, playerId);
+            
             sendToServer({
                 type: 'joinRoom',
                 roomCode: roomCode,
                 playerId: playerId,
                 playerName: playerName
             });
-       }
+        }
 
-       function leaveRoom() {
-           if (currentRoom) {
-               sendToServer({
-                   type: 'leaveRoom',
-                   playerId: playerId,
-                   roomCode: currentRoom
-               });
-           }
-           showLoginContainer();
-       }
+        function leaveRoom() {
+            if (currentRoom) {
+                if (gameStarted) {
+                    if (confirm('게임 진행 중입니다. 나가시면 같은 방 코드로 다시 입장하실 수 있습니다. 나가시겠습니까?')) {
+                        sendToServer({
+                            type: 'leaveRoom',
+                            playerId: playerId,
+                            roomCode: currentRoom
+                        });
+                        showLoginContainer();
+                    }
+                } else {
+                    if (confirm('방에서 나가시겠습니까?')) {
+                        sendToServer({
+                            type: 'leaveRoom',
+                            playerId: playerId,
+                            roomCode: currentRoom
+                        });
+                        localStorage.removeItem('playerInfo'); // 게임 중이 아닐 때는 저장된 정보 삭제
+                        showLoginContainer();
+                    }
+                }
+            }
+        }
 
        function sendToServer(data) {
            if (ws && ws.readyState === WebSocket.OPEN) {
@@ -849,14 +895,26 @@
 
        function updateGameState(state) {
             isHost = state.isHost;
-            isFirstGame = state.isFirstGame; // 서버에서 받은 첫 게임 상태 적용
+            isFirstGame = state.isFirstGame;
+            gameStarted = state.gameStarted;
+
+            // 시작 버튼과 종료 버튼 표시 상태 업데이트
             document.getElementById('startButton').style.display = isHost ? 'block' : 'none';
             document.getElementById('endButton').style.display = isHost ? 'block' : 'none';
-
-            // 게임이 시작되었고 첫 게임이 아닐 때만 설명 숨기기
+            
+            // 게임 설명 표시/숨김
             if (document.getElementById('cardInstructions')) {
                 document.getElementById('cardInstructions').style.display = 
                     isFirstGame ? 'block' : 'none';
+            }
+
+            // 다이 버튼과 상태 표시
+            const cardContainer = document.getElementById('cardContainer');
+            if (state.isDied) {
+                cardContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">죽었습니다.</p>';
+                document.getElementById('dieButton').style.display = 'none';
+            } else {
+                document.getElementById('dieButton').style.display = gameStarted ? 'block' : 'none';
             }
 
             // 게임이 시작되면 모든 플레이어의 족보 하이라이트 초기화
@@ -865,21 +923,26 @@
                 cachedPokkal = null;
             }
 
+            // 플레이어 목록 업데이트
             const playersList = document.getElementById('players');
             playersList.innerHTML = '';
             
             state.players.forEach(player => {
                 const li = document.createElement('li');
                 const playerInfo = document.createElement('span');
-                playerInfo.textContent = `${player.name} ${player.isHost ? '(방장)' : ''}`;
+                const status = [];
+                
+                if (player.isHost) status.push('(방장)');
+                if (player.isDied) status.push('(다이)');
+                
+                playerInfo.textContent = `${player.name} ${status.join(' ')}`;
                 
                 const cardIndicator = document.createElement('div');
                 cardIndicator.className = 'player-card-indicator';
                 
-                if (player.hasCards && player.id !== playerId) {
+                if (player.hasCards && player.id !== playerId && !player.isDied) {
                     for (let i = 0; i < 2; i++) {
                         const cardImg = document.createElement('img');
-                        // 게임이 진행중이면 뒷면(0.png), 아니면 앞면(실제 카드) 표시
                         cardImg.src = `image/${state.gameStarted ? '0' : player.cards[i]}.png`;
                         cardIndicator.appendChild(cardImg);
                     }
@@ -1010,6 +1073,20 @@
                }
            });
        });
+
+       // 웹소켓 연결 해제 시 자동 재접속
+        ws.onclose = () => {
+            console.log('WebSocket disconnected');
+            
+            if (savedPlayerInfo) {
+                setTimeout(() => {
+                    connectWebSocket();
+                    if (savedPlayerInfo.roomCode) {
+                        joinRoom();
+                    }
+                }, 3000);
+            }
+        };
    </script>
 </body>
 </html>
