@@ -640,29 +640,36 @@
            });
 
            firstCard.addEventListener('touchmove', (e) => {
-               if (isDragging && isFirstCardFlipped) {
-                   let deltaY = e.touches[0].clientY - startY;
-                   if (deltaY > 0) {
-                       e.preventDefault();
-                       firstCard.style.transform = `translateY(${deltaY}px)`;
-                   }
-               }
-           });
+                if (isDragging && isFirstCardFlipped) {
+                    let deltaY = e.touches[0].clientY - startY;
+                    if (deltaY > 0) {
+                        // preventDefault는 passive 이슈가 있을 수 있어 별도 옵션으로 설정
+                        try {
+                            e.preventDefault(); // 스크롤 방지 시도
+                        } catch (error) {
+                            // 일부 브라우저에서는 에러가 발생할 수 있음
+                            console.log('preventDefault 실패, 계속 진행');
+                        }
+                        
+                        // transform 대신 top 속성을 사용해 보기
+                        firstCard.style.position = 'relative';
+                        firstCard.style.top = `${deltaY}px`;
+                    }
+                }
+            }, { passive: false }); // passive: false 명시적 설정
 
-           firstCard.addEventListener('touchend', (e) => {
-               if (isDragging) {
-                   const transform = firstCard.style.transform;
-                   const match = transform.match(/translateY\((\d+)px\)/);
-                   if (match) {
-                       const deltaY = parseInt(match[1]);
-                       if (deltaY > firstCardImg.height * 1) {
-                           showFinalCards();
-                       }
-                   }
-                   firstCard.style.transform = '';
-                   isDragging = false;
-               }
-           });
+            firstCard.addEventListener('touchend', (e) => {
+                if (isDragging) {
+                    const currentTop = parseInt(firstCard.style.top || '0');
+                    if (currentTop > firstCardImg.height * 0.5) { // 기준값 낮춤
+                        showFinalCards();
+                    }
+                    // 위치 초기화
+                    firstCard.style.top = '';
+                    firstCard.style.position = '';
+                    isDragging = false;
+                }
+            }, { passive: false });
 
            function showFinalCards() {
                cardContainer.innerHTML = '';
@@ -751,8 +758,11 @@
                        handleRoomJoin(data);
                        break;
                    case 'gameState':
-                       updateGameState(data);
-                       break;
+                        if (data.playerCards && data.gameStarted) {
+                            displayCards(data.playerCards);
+                        }
+                        updateGameState(data);
+                        break;
                    case 'cards':
                        displayCards(data.cards);
                        break;
@@ -765,10 +775,19 @@
                }
            };
 
-           ws.onclose = () => {
-               console.log('WebSocket disconnected');
-               setTimeout(connectWebSocket, 3000);
-           };
+           // 웹소켓 연결 해제 시 자동 재접속
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                
+                // 3초 후 재연결 시도
+                setTimeout(() => {
+                    connectWebSocket();
+                    // 저장된 정보가 있으면 재접속 시도
+                    if (savedPlayerInfo && savedPlayerInfo.roomCode) {
+                        // connectWebSocket 이후에 ws가 열렸을 때 joinRoom이 호출되므로 여기서는 호출하지 않음
+                    }
+                }, 3000);
+            };
        }
 
        function handleRoomJoin(data) {
@@ -824,10 +843,31 @@
             });
         }
 
+        function cleanupRoom() {
+            // 카드 컨테이너의 모든 이벤트 리스너 제거
+            const cardContainer = document.getElementById('cardContainer');
+            const cards = cardContainer.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                // 모든 이벤트 제거를 위해 새 요소로 교체하는 방법 사용
+                const newCard = card.cloneNode(true);
+                card.parentNode.replaceChild(newCard, card);
+            });
+            
+            // 상태 초기화
+            myCardNumbers = [];
+            flippedCards = 0;
+            cachedPokkal = null;
+            
+            // 카드 컨테이너 내용 초기화
+            cardContainer.innerHTML = '';
+        }
+
         function leaveRoom() {
             if (currentRoom) {
                 if (gameStarted) {
                     if (confirm('게임 진행 중입니다. 나가시면 같은 방 코드로 다시 입장하실 수 있습니다. 나가시겠습니까?')) {
+                        cleanupRoom();
                         sendToServer({
                             type: 'leaveRoom',
                             playerId: playerId,
@@ -837,6 +877,7 @@
                     }
                 } else {
                     if (confirm('방에서 나가시겠습니까?')) {
+                        cleanupRoom();
                         sendToServer({
                             type: 'leaveRoom',
                             playerId: playerId,
@@ -923,6 +964,13 @@
                 cachedPokkal = null;
             }
 
+            // 다이하지 않은 플레이어 수 계산
+            const activePlayers = state.players.filter(player => !player.isDied);
+            const isLastPlayerStanding = activePlayers.length === 1;
+            
+            // 게임이 종료되고 한 명만 남았다면 카드를 보여주지 않음
+            const hideLastPlayerCards = !gameStarted && isLastPlayerStanding;
+
             // 플레이어 목록 업데이트
             const playersList = document.getElementById('players');
             playersList.innerHTML = '';
@@ -940,10 +988,13 @@
                 const cardIndicator = document.createElement('div');
                 cardIndicator.className = 'player-card-indicator';
                 
-                if (player.hasCards && player.id !== playerId && !player.isDied) {
+                // 마지막 남은 플레이어의 카드는 게임 종료 시 보여주지 않음
+                const shouldShowCards = player.hasCards && player.id !== playerId && !player.isDied;
+                
+                if (shouldShowCards && !(hideLastPlayerCards && activePlayers[0]?.id === player.id)) {
                     for (let i = 0; i < 2; i++) {
                         const cardImg = document.createElement('img');
-                        cardImg.src = `image/${state.gameStarted ? '0' : player.cards[i]}.png`;
+                        cardImg.src = `image/${gameStarted ? '0' : player.cards[i]}.png`;
                         cardIndicator.appendChild(cardImg);
                     }
                 }
@@ -1073,20 +1124,6 @@
                }
            });
        });
-
-       // 웹소켓 연결 해제 시 자동 재접속
-        ws.onclose = () => {
-            console.log('WebSocket disconnected');
-            
-            if (savedPlayerInfo) {
-                setTimeout(() => {
-                    connectWebSocket();
-                    if (savedPlayerInfo.roomCode) {
-                        joinRoom();
-                    }
-                }, 3000);
-            }
-        };
    </script>
 </body>
 </html>

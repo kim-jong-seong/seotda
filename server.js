@@ -152,7 +152,7 @@ class CardGame {
         for (let playerId of this.players.keys()) {
             this.firstGamePlayers.add(playerId);
         }
-
+    
         // 다이한 플레이어들의 카드는 null로 설정
         for (let playerId of this.diedPlayers) {
             if (this.players.has(playerId)) {
@@ -160,36 +160,77 @@ class CardGame {
             }
         }
         
+        // 마지막 남은 플레이어 계산 로직은 필요 없음
+        // 게임이 종료되었으므로 모든 플레이어의 카드를 숨김 처리하지 않음
+        
         this.broadcastGameState();
         this.diedPlayers.clear(); // 다이 목록 초기화
         return { success: true };
     }
 
     broadcastGameState() {
-        const gameState = {
-            type: 'gameState',
-            roomCode: this.roomCode,
-            totalPlayers: this.players.size,
-            gameStarted: this.gameStarted,
-            players: Array.from(this.players.entries()).map(([id, info]) => ({
-                id,
-                name: info.name,
-                hasCards: info.cards?.length > 0,
-                isHost: id === this.hostId,
-                isFirstGame: !this.firstGamePlayers.has(id),
-                isDied: this.diedPlayers.has(id), // 다이 여부 추가
-                cards: info.cards
-            }))
-        };
-
-        for (let [playerId, playerInfo] of this.players) {
+        // 다이하지 않은 플레이어 수 계산
+        const activePlayers = Array.from(this.players.keys())
+            .filter(playerId => !this.diedPlayers.has(playerId));
+        
+        // 단 한 명의 플레이어만 남았는지 확인
+        const isLastPlayerStanding = this.gameStarted && activePlayers.length === 1;
+        const lastPlayerId = isLastPlayerStanding ? activePlayers[0] : null;
+    
+        // 플레이어별로 개별 메시지 전송
+        for (let [currentPlayerId, playerInfo] of this.players) {
             if (playerInfo.ws.readyState === WebSocket.OPEN) {
-                playerInfo.ws.send(JSON.stringify({
-                    ...gameState,
-                    isHost: playerId === this.hostId,
-                    isFirstGame: !this.firstGamePlayers.has(playerId),
-                    isDied: this.diedPlayers.has(playerId)
-                }));
+                // 플레이어 정보 배열 생성
+                const playersList = [];
+                
+                // 모든 플레이어 정보 구성
+                for (let [id, info] of this.players) {
+                    // 플레이어 기본 정보
+                    const playerData = {
+                        id,
+                        name: info.name,
+                        hasCards: info.cards?.length > 0,
+                        isHost: id === this.hostId,
+                        isFirstGame: !this.firstGamePlayers.has(id),
+                        isDied: this.diedPlayers.has(id)
+                    };
+                    
+                    // 카드 정보 처리
+                    // 1. 자신의 카드는 항상 볼 수 있음
+                    // 2. 마지막 남은 플레이어의 카드는 본인만 볼 수 있음
+                    // 3. 게임이 종료되면 모든 플레이어 표시
+                    if (id === currentPlayerId) {
+                        // 자신의 카드는 항상 표시
+                        playerData.cards = info.cards;
+                    } else if (isLastPlayerStanding && id === lastPlayerId) {
+                        // 마지막 남은 플레이어의 카드는 다른 플레이어에게 보이지 않음
+                        playerData.cards = null;
+                    } else {
+                        // 그 외 플레이어의 카드는 정상 표시
+                        playerData.cards = info.cards;
+                    }
+                    
+                    playersList.push(playerData);
+                }
+                
+                // 게임 상태 메시지
+                const gameState = {
+                    type: 'gameState',
+                    roomCode: this.roomCode,
+                    totalPlayers: this.players.size,
+                    gameStarted: this.gameStarted,
+                    isHost: currentPlayerId === this.hostId,
+                    isFirstGame: !this.firstGamePlayers.has(currentPlayerId),
+                    isDied: this.diedPlayers.has(currentPlayerId),
+                    players: playersList
+                };
+                
+                // 마지막 남은 플레이어 본인에게만 카드 정보 추가
+                if (isLastPlayerStanding && currentPlayerId === lastPlayerId) {
+                    gameState.playerCards = this.players.get(lastPlayerId).cards;
+                }
+                
+                playerInfo.ws.send(JSON.stringify(gameState));
             }
         }
     }
